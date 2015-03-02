@@ -1,3 +1,3 @@
 
 
-Experimental Postgres FDW for MongoDB, that utilises the excellent [multicorn](multicorn.org) extension.
+Experimental Postgres FDW for MongoDB, that utilises the excellent [multicorn](http://multicorn.org) extension.
