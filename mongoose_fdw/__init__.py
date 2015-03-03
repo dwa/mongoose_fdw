@@ -41,7 +41,7 @@ class Mongoose_fdw (ForeignDataWrapper):
             log2pg('Quals are not implemented yet')
 
         ## Only request fields of interest:
-        fields = {k: True for k in columns.keys()}
+        fields = {k: True for k in columns}
         if '_id' not in fields:
             fields['_id'] = False
 
