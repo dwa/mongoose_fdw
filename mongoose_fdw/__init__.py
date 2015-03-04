@@ -1,6 +1,6 @@
 ###
 ### Author: David Wallin
-### Time-stamp: <2015-03-03 12:21:28 dwa>
+### Time-stamp: <2015-03-04 23:06:35 dwa>
 
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres as log2pg
@@ -47,11 +47,21 @@ class Mongoose_fdw (ForeignDataWrapper):
     def build_spec(self, quals):
         Q = {}
 
+        comp_mapper = {'>': '$gt',
+                       '>=': '$gte',
+                       '<=': '$lte',
+                       '<': '$lt'}
+
         for qual in quals:
             val_formatter = self.fields[qual.field_name]
             vform = lambda val: val_formatter(val) if val_formatter is not None else val
             if qual.operator == '=':
-                Q[qual.field_name] = qual.value
+
+                Q[qual.field_name] = vform(qual.value)
+            elif qual.operator in ('>', '>=', '<=', '<'):
+                comp = Q.setdefault(qual.field_name, {})
+                comp[comp_mapper[qual.operator]] = vform(qual.value)
+                Q[qual.field_name] = comp
             else:
                 log2pg('Qual operator {} not implemented yet: {}'.format(qual.field_name, qual))
         return Q
