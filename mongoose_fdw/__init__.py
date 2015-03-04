@@ -6,6 +6,14 @@ from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres as log2pg
 
 from pymongo import MongoClient
+from dateutil.parser import parse
+
+
+def coltype_formatter(coltype):
+    if coltype in ('timestamp without time zone', 'timestamp with time zone', 'date'):
+        return lambda x: x if hasattr(x, 'isoformat') else parse(x)
+    else:
+        return None
 
 
 class Mongoose_fdw (ForeignDataWrapper):
@@ -34,10 +42,14 @@ class Mongoose_fdw (ForeignDataWrapper):
         self.db = getattr(self.c, self.db_name)
         self.coll = getattr(self.db, self.collection_name)
 
+        self.fields = {col: coltype_formatter(coldef.type_name) for (col, coldef) in columns.items()}
+
     def build_spec(self, quals):
         Q = {}
 
         for qual in quals:
+            val_formatter = self.fields[qual.field_name]
+            vform = lambda val: val_formatter(val) if val_formatter is not None else val
             if qual.operator == '=':
                 Q[qual.field_name] = qual.value
             else:
